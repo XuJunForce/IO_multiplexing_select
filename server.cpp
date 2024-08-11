@@ -40,7 +40,12 @@ int main(){
 
         rdtemp = rdset;
         int num = select(maxfd+1, &rdtemp, NULL, NULL, NULL);
-
+        if (num == -1) {
+            perror("select");
+            break;  // 发生错误，跳出循环
+        } else if (num == 0) {
+            continue;  // 超时，继续等待
+        }
         if((FD_ISSET(lfd, &rdtemp))){
             struct sockaddr_in caddr;
             socklen_t len = sizeof(caddr);
@@ -57,16 +62,17 @@ int main(){
                 //判断监听描述符之后到maxfd这个范围是否存在读缓冲区
                 if(i != lfd && FD_ISSET(i, &rdtemp)){
 
-                    char buf[10] = {0};
+                    char buf[1024] = {0};
                     int len = read(i, buf, sizeof(buf));
                     if(len > 0){
                     printf("client says:%s\n",buf);
-                    write(cfd, buf, strlen(buf)+1);
-                    memset(buf, 0 ,sizeof(buf));
+                    write(i, buf, strlen(buf));
                     }
                     else if(len == 0){
                         printf("client disconnected\n");
-                        break;
+                        FD_CLR(i, &rdset);
+                        close(i);
+                        continue;
                     }
                     else if(len < 0){
                         perror("read");
@@ -74,6 +80,7 @@ int main(){
                     }
 
                 }
+                
             }
         }
     }
