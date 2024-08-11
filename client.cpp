@@ -50,7 +50,7 @@ int main(){
         //send data  
         sprintf(buff, "你好, hello,world, %d...\n",number++);
 
-        send(fd, buff, strlen(buff), 0);
+        send(fd, buff, strlen(buff) + 1, 0);
 
         //清空数据并接收新的数据
         //memset(buff,0, sizeof(buff));
