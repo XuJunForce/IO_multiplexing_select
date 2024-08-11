@@ -24,7 +24,7 @@ int main(){
     struct sockaddr_in caddr;
     caddr.sin_family=AF_INET;
     //caddr.sin_addr.s_addr = htonl('127.0.0.1');
-    caddr.sin_port = htons(10000);
+    caddr.sin_port = htons(60000);
     inet_pton(AF_INET, "127.0.0.1", &caddr.sin_addr.s_addr);
 
     int ret = connect(fd,(struct sockaddr*)&caddr, sizeof(caddr));    
@@ -46,24 +46,27 @@ int main(){
             close(fd);
             break;
         }
+
         //send data  
         sprintf(buff, "你好, hello,world, %d...\n",number++);
-        send(fd, buff, strlen(buff + 1), 0);
+
+        send(fd, buff, strlen(buff), 0);
 
         //清空数据并接收新的数据
         //memset(buff,0, sizeof(buff));
-        int len = recv(fd, buff, sizeof(buff), 0);
-        if(len > 0){
-            printf("server says:%s\n",buff);
-        }
-        else if(len==0){
-            printf("server disconnected\n");
-            break;
-        }
-        else if(len < 0){
-            perror("recv");
-            break;
-        }
+
+        // int len = recv(fd, buff, sizeof(buff), 0);
+        // if(len > 0){
+        //     printf("server says:%s\n",buff);
+        // }
+        // else if(len==0){
+        //     printf("server disconnected\n");
+        //     break;
+        // }
+        // else if(len < 0){
+        //     perror("recv");
+        //     break;
+        // }
 
         sleep(1);
     }

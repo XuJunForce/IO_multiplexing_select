@@ -14,7 +14,7 @@ int main(){
     struct sockaddr_in saddr;
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    saddr.sin_port = htons(10000);
+    saddr.sin_port = htons(60000);
 
     int ret = bind(lfd, (struct sockaddr*)&saddr, sizeof(saddr));
     if(ret == -1){
@@ -35,7 +35,7 @@ int main(){
     FD_ZERO(&rdset);
     FD_SET(lfd,&rdset);
 
-
+    
     while(1){
 
         rdtemp = rdset;
@@ -55,55 +55,30 @@ int main(){
             FD_SET(cfd, &rdset);
 
             maxfd = cfd > maxfd? cfd : maxfd;
+        }
+        for(int i = 0;i<maxfd+1;++i){
+            //判断监听描述符之后到maxfd这个范围是否存在读缓冲区
+            if(i != lfd && FD_ISSET(i, &rdtemp)){
 
-
-
-            for(int i = 0;i<maxfd+1;++i){
-                //判断监听描述符之后到maxfd这个范围是否存在读缓冲区
-                if(i != lfd && FD_ISSET(i, &rdtemp)){
-
-                    char buf[1024] = {0};
-                    int len = read(i, buf, sizeof(buf));
-                    if(len > 0){
-                    printf("client says:%s\n",buf);
-                    write(i, buf, strlen(buf));
-                    }
-                    else if(len == 0){
-                        printf("client disconnected\n");
-                        FD_CLR(i, &rdset);
-                        close(i);
-                        continue;
-                    }
-                    else if(len < 0){
-                        perror("read");
-                        break;
-                    }
-
+                char buf[10] = {0};
+                int len = read(i, buf, sizeof(buf));
+                if(len > 0){
+                printf("client says:%s\n",buf);
                 }
-                
+                else if(len == 0){
+                    printf("client disconnected\n");
+                    FD_CLR(i, &rdset);
+                    close(i);
+                    continue;
+                }
+                else if(len < 0){
+                    perror("read");
+                    break;
+                }
+
             }
+                
         }
     }
-
-
-            //开始通信
-        //     while(1){
-        //         int len = read(cfd, buff ,sizeof(buff));
-        //         if(len > 0){
-        //             printf("client says:%s\n",buff);
-        //             write(cfd, buff, sizeof(len));
-        //             memset(buff, 0 ,sizeof(buff));
-        //         }
-        //         else if(len == 0){
-        //             printf("client disconnected\n");
-        //             break;
-        //         }
-        //         else if(len < 0){
-        //             perror("read");
-        //             break;
-        //         }
-        //     }
-        // }
-
     return 0;
 }
