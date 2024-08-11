@@ -35,17 +35,28 @@ int main(){
     FD_ZERO(&rdset);
     FD_SET(lfd,&rdset);
 
-    
-    while(1){
+    int timeout = 0;
 
+    struct timeval time;
+    time.tv_sec = 5;  // 1 seconds timeout
+    time.tv_usec = 0; // 0 microseconds
+    int num = select(maxfd+1, &rdtemp, NULL, NULL, &time);
+
+    while(1){
+        if(timeout==5){
+            printf("timeout\n");
+            break;
+        }
         rdtemp = rdset;
-        int num = select(maxfd+1, &rdtemp, NULL, NULL, NULL);
+        int num = select(maxfd+1, &rdtemp, NULL, NULL, &time);
         if (num == -1) {
             perror("select");
             break;  // 发生错误，跳出循环
         } else if (num == 0) {
+            timeout++;
             continue;  // 超时，继续等待
         }
+        printf("lfd\n");
         if((FD_ISSET(lfd, &rdtemp))){
             struct sockaddr_in caddr;
             socklen_t len = sizeof(caddr);
@@ -56,12 +67,13 @@ int main(){
 
             maxfd = cfd > maxfd? cfd : maxfd;
         }
+        printf("cfd\n");
         for(int i = 0;i<maxfd+1;++i){
             //判断监听描述符之后到maxfd这个范围是否存在读缓冲区
             if(i != lfd && FD_ISSET(i, &rdtemp)){
 
                 char buf[10] = {0};
-                int len = read(i, buf, sizeof(buf));
+                int len = read(i, buf, sizeof(buf)-1);
                 if(len > 0){
                 printf("client says:%s\n",buf);
                 }
@@ -80,5 +92,7 @@ int main(){
                 
         }
     }
+    close(lfd);
+
     return 0;
 }
